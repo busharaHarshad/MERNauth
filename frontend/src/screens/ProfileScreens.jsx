@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button, Image } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import FormContainer from '../components/FormContainer';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ const ProfileScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState('');
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -25,29 +26,34 @@ const ProfileScreen = () => {
     if (userInfo) {
       setName(userInfo.name);
       setEmail(userInfo.email);
+      setProfileImageUrl(userInfo.profileImage || '');
     }
   }, [userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
-    } else {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('password', password);
-      if (profileImage) {
-        formData.append('profileImage', profileImage);
-      }
+      return;
+    }
 
-      try {
-        const res = await updateProfile(formData).unwrap();
-        dispatch(setCredentials({ ...res }));
-        toast.success('Profile updated successfully');
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+    // Make sure to declare formData inside submitHandler
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    if (profileImage) {
+      formData.append('profileImage', profileImage);
+    }
+
+    try {
+      const res = await updateProfile(formData).unwrap();
+      dispatch(setCredentials({ ...res }));
+      setProfileImageUrl(res.profileImage); // Update the state with the new image URL
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
   };
 
@@ -61,6 +67,17 @@ const ProfileScreen = () => {
       <h1>Update Profile</h1>
 
       <Form onSubmit={submitHandler}>
+        {profileImageUrl && (
+          <div className='mb-3 text-center'>
+            <Image
+              src={profileImageUrl}
+              roundedCircle
+              alt='Profile'
+              style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+            />
+          </div>
+        )}
+
         <Form.Group className='my-2' controlId='name'>
           <Form.Label>Name</Form.Label>
           <Form.Control
@@ -70,6 +87,7 @@ const ProfileScreen = () => {
             onChange={(e) => setName(e.target.value)}
           ></Form.Control>
         </Form.Group>
+
         <Form.Group className='my-2' controlId='email'>
           <Form.Label>Email Address</Form.Label>
           <Form.Control
@@ -77,8 +95,10 @@ const ProfileScreen = () => {
             placeholder='Enter email'
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            readOnly
           ></Form.Control>
         </Form.Group>
+
         <Form.Group className='my-2' controlId='password'>
           <Form.Label>Password</Form.Label>
           <Form.Control
@@ -107,7 +127,7 @@ const ProfileScreen = () => {
             onChange={uploadFileHandler}
           ></Form.Control>
         </Form.Group>
-            
+
         {isLoading && <Loader />}
         <Button type='submit' variant='primary' className='mt-3'>
           Update

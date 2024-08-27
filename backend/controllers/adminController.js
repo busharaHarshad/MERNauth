@@ -114,6 +114,37 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
   });
   
+  const createUser = asyncHandler(async (req, res) => {
+    const { name, email, password, isAdmin } = req.body;
+  
+    // Check if the user already exists
+    const userExists = await User.findOne({ email });
+  
+    if (userExists) {
+      res.status(400);
+      throw new Error('User already exists');
+    }
+  
+    // Create and save a new user in the database
+    const user = new User({
+      name,
+      email,
+      password,
+    });
+  
+    const createdUser = await user.save();
+  
+    if (createdUser) {
+      res.status(201).json({
+        _id: createdUser._id,
+        name: createdUser.name,
+        email: createdUser.email,
+      });
+    } else {
+      res.status(400);
+      throw new Error('Invalid user data');
+    }
+  });
 export{
     adminLogin,
     logoutAdmin,
@@ -122,5 +153,5 @@ export{
     deleteUser,
     searchUsers,
     updateUser,
-
+    createUser,
 }

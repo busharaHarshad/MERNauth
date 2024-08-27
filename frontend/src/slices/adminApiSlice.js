@@ -37,7 +37,14 @@ export const adminApiSlice = createApi({
         body: userData,
       }),
     }),
+    createUser: builder.mutation({
+      query: (userData) => ({
+        url: '/admin/createusers',
+        method: 'POST',
+        body: userData,
+      }),
+    }),
   })
 });
 
-export const {useAdminLoginMutation,useGetUsersMutation, useDeleteUserMutation,useSearchUsersQuery,useUpdateUserMutation} = adminApiSlice;
+export const {useAdminLoginMutation,useGetUsersMutation, useDeleteUserMutation,useSearchUsersQuery,useUpdateUserMutation,useCreateUserMutation} = adminApiSlice;
